@@ -433,11 +433,7 @@
       <!-- Chart -->
       <div class="panel">
         <div class="chart-header">
-          <span class="chart-heading">収益インパクト推移（0〜5年）</span>
-          <div class="legend">
-            <span><span class="leg-box" style="background:#185FA5;"></span>累積利益</span>
-            <span><span class="leg-dashed"></span>累積キャッシュフロー</span>
-          </div>
+          <span class="chart-heading">累積利益推移（0〜5年）</span>
         </div>
         <div class="chart-wrap">
           <canvas id="roiChart" role="img" aria-label="0〜5年の累積利益と累積キャッシュフローの推移グラフ">累積利益の推移</canvas>
@@ -472,19 +468,7 @@
           pointBorderColor: "#fff",
           pointBorderWidth: 2
         },
-        {
-          label: "累積キャッシュフロー",
-          data: [],
-          borderColor: "#1D9E75",
-          backgroundColor: "transparent",
-          borderDash: [7, 5],
-          tension: 0.35,
-          borderWidth: 2,
-          pointRadius: 4,
-          pointBackgroundColor: "#1D9E75",
-          pointBorderColor: "#fff",
-          pointBorderWidth: 2
-        }
+
       ]
     },
     options: {
@@ -583,14 +567,11 @@
     kF.className = "kpi-value " + (fiveYear >= 0 ? "color-teal" : "color-orange");
 
     const profitData = [0];
-    const cashData   = [0];
     for (let i = 1; i <= 5; i++) {
       profitData.push(annualProfit * i);
-      cashData.push(annualRev * i - annualCostY);
     }
 
     chart.data.datasets[0].data = profitData;
-    chart.data.datasets[1].data = cashData;
     chart.update();
   }
 
