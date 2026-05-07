@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>上部内視鏡AI導入シミュレーター</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --surface2: #f0f3f7;
+      --border: rgba(0,0,0,0.1);
+      --border-strong: rgba(0,0,0,0.18);
+      --text: #1a2233;
+      --text-muted: #6b7a94;
+      --text-hint: #9daabf;
+      --blue: #185FA5;
+      --blue-light: #e6f1fb;
+      --teal: #1D9E75;
+      --teal-light: #e1f5ee;
+      --orange: #D85A30;
+      --orange-light: #faece7;
+      --radius-md: 8px;
+      --radius-lg: 14px;
+    }
+
+    body {
+      font-family: "Noto Sans JP", "Hiragino Sans", sans-serif;
+      font-size: 14px;
+      background: var(--bg);
+      color: var(--text);
+      padding: 28px 24px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1160px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    .header-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .header-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .btn-print {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: var(--surface);
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: 7px 14px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    .btn-print:hover { background: var(--surface2); }
+
+    /* Main layout */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 290px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    /* Panel (card) */
+    .panel {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+    }
+
+    .panel-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .07em;
+      color: var(--text-hint);
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    /* Input blocks */
+    .inp-block { margin-bottom: 18px; }
+    .inp-block:last-child { margin-bottom: 0; }
+
+    .inp-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 7px;
+    }
+
+    .inp-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .inp-val {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--blue);
+      text-align: right;
+      min-width: 100px;
+    }
+
+    .inp-val .unit {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-left: 2px;
+    }
+
+    /* Range slider */
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      background: var(--surface2);
+      border-radius: 99px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: var(--blue);
+      border-radius: 50%;
+      box-shadow: 0 1px 4px rgba(24,95,165,0.3);
+      transition: transform .1s;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+    input[type=range]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      background: var(--blue);
+      border-radius: 50%;
+      border: none;
+    }
+
+    .range-minmax {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-hint);
+      margin-top: 5px;
+    }
+
+    /* Divider */
+    .divider {
+      border: none;
+      border-top: 0.5px solid var(--border);
+      margin: 16px 0;
+    }
+
+    /* Right section */
+    .right-section { display: flex; flex-direction: column; gap: 14px; }
+
+    /* KPI cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .kpi {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .kpi-value {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .kpi-note {
+      font-size: 11px;
+      color: var(--text-hint);
+    }
+
+    .color-teal  { color: var(--teal); }
+    .color-blue  { color: var(--blue); }
+    .color-orange { color: var(--orange); }
+    .color-default { color: var(--text); }
+
+    .kpi.accent-teal  { border-left: 3px solid var(--teal); }
+    .kpi.accent-blue  { border-left: 3px solid var(--blue); }
+    .kpi.accent-orange { border-left: 3px solid var(--orange); }
+    .kpi.accent-gray  { border-left: 3px solid var(--border-strong); }
+
+    /* Chart card */
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .chart-heading {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+      align-items: center;
+    }
+
+    .leg-box {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      display: inline-block;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    .leg-dashed {
+      width: 16px;
+      height: 2px;
+      border-top: 2px dashed var(--teal);
+      display: inline-block;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 240px;
+    }
+
+    .chart-note {
+      font-size: 11px;
+      color: var(--text-hint);
+      margin-top: 12px;
+    }
+
+    /* Print */
+    @media print {
+      body { background: white; padding: 16px; }
+      .btn-print { display: none; }
+      .panel, .kpi { border: 1px solid #ccc !important; }
+    }
+
+    /* Responsive */
+    @media (max-width: 860px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .header { flex-wrap: wrap; gap: 12px; }
+    }
+
+    @media (max-width: 520px) {
+      body { padding: 16px 14px; }
+      .header-title { font-size: 17px; }
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <h1 class="header-title">上部内視鏡AI 導入シミュレーター</h1>
+      <p class="header-sub">健診センター・内視鏡クリニック向け収益インパクト試算</p>
+    </div>
+    <button class="btn-print" onclick="window.print()">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+        <rect x="6" y="14" width="12" height="8" rx="1"/>
+      </svg>
+      印刷
+    </button>
+  </div>
+
+  <!-- Main -->
+  <div class="main-grid">
+
+    <!-- LEFT: Inputs -->
+    <div class="panel">
+      <p class="panel-label">入力項目</p>
+
+      <div class="inp-block">
+        <div class="inp-row">
+          <span class="inp-name">年間胃カメラ件数</span>
+          <span class="inp-val" id="dCases">2,200<span class="unit">件</span></span>
+        </div>
+        <input type="range" min="500" max="5000" step="50" value="2200" id="rCases">
+        <div class="range-minmax"><span>500件</span><span>5,000件</span></div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="inp-block">
+        <div class="inp-row">
+          <span class="inp-name">オプション加算額（With AI）</span>
+          <span class="inp-val" id="dOption">1,500<span class="unit">円/件</span></span>
+        </div>
+        <input type="range" min="500" max="3000" step="100" value="1500" id="rOption">
+        <div class="range-minmax"><span>500円</span><span>3,000円</span></div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="inp-block">
+        <div class="inp-row">
+          <span class="inp-name">月額AI費用</span>
+          <span class="inp-val" id="dCost">370,000<span class="unit">円/月</span></span>
+        </div>
+        <input type="range" min="100000" max="500000" step="10000" value="370000" id="rCost">
+        <div class="range-minmax"><span>10万円</span><span>50万円</span></div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="inp-block">
+        <div class="inp-row">
+          <span class="inp-name">件数増加率</span>
+          <span class="inp-val" id="dGrowth">1<span class="unit">%</span></span>
+        </div>
+        <input type="range" min="0" max="20" step="1" value="1" id="rGrowth">
+        <div class="range-minmax"><span>0%</span><span>20%</span></div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right-section">
+
+      <!-- KPI cards -->
+      <div class="kpi-grid">
+        <div class="kpi accent-teal">
+          <p class="kpi-label">年間追加売上</p>
+          <p class="kpi-value color-teal" id="kSales">—</p>
+          <p class="kpi-note">AIオプション売上増</p>
+        </div>
+        <div class="kpi accent-blue">
+          <p class="kpi-label">年間利益増</p>
+          <p class="kpi-value" id="kProfit">—</p>
+          <p class="kpi-note">AI費用差し引き後</p>
+        </div>
+        <div class="kpi accent-gray">
+          <p class="kpi-label">投資回収期間</p>
+          <p class="kpi-value color-default" id="kRoi">—</p>
+          <p class="kpi-note">ROIシミュレーション</p>
+        </div>
+        <div class="kpi accent-teal">
+          <p class="kpi-label">5年累積利益</p>
+          <p class="kpi-value" id="kFive">—</p>
+          <p class="kpi-note">中長期インパクト</p>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="panel">
+        <div class="chart-header">
+          <span class="chart-heading">収益インパクト推移（0〜5年）</span>
+          <div class="legend">
+            <span><span class="leg-box" style="background:#185FA5;"></span>累積利益</span>
+            <span><span class="leg-dashed"></span>累積キャッシュフロー</span>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="roiChart" role="img" aria-label="0〜5年の累積利益と累積キャッシュフローの推移グラフ">累積利益の推移</canvas>
+        </div>
+        <p class="chart-note">※本シミュレーションは概算値であり、実際の結果を保証するものではありません。</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const fmt = n => "¥" + Math.round(n).toLocaleString("ja-JP");
+  const fmtN = n => Math.round(n).toLocaleString("ja-JP");
+
+  const ctx = document.getElementById("roiChart").getContext("2d");
+  const chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: ["0年", "1年後", "2年後", "3年後", "4年後", "5年後"],
+      datasets: [
+        {
+          label: "累積利益",
+          data: [],
+          borderColor: "#185FA5",
+          backgroundColor: "rgba(24,95,165,0.07)",
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2.5,
+          pointRadius: 5,
+          pointBackgroundColor: "#185FA5",
+          pointBorderColor: "#fff",
+          pointBorderWidth: 2
+        },
+        {
+          label: "累積キャッシュフロー",
+          data: [],
+          borderColor: "#1D9E75",
+          backgroundColor: "transparent",
+          borderDash: [7, 5],
+          tension: 0.35,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: "#1D9E75",
+          pointBorderColor: "#fff",
+          pointBorderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => "  " + ctx.dataset.label + ": " + fmt(ctx.raw)
+          }
+        }
+      },
+      scales: {
+        y: {
+          grid: { color: "rgba(0,0,0,0.05)" },
+          ticks: {
+            font: { size: 11 },
+            callback: v => {
+              const abs = Math.abs(v);
+              const sign = v < 0 ? "-" : "";
+              if (abs >= 10000000) return sign + "¥" + Math.round(abs / 10000000) + "千万";
+              if (abs >= 1000000)  return sign + "¥" + Math.round(abs / 10000) + "万";
+              return sign + "¥" + fmtN(abs);
+            }
+          }
+        },
+        x: {
+          grid: { color: "rgba(0,0,0,0.05)" },
+          ticks: { font: { size: 11 } }
+        }
+      }
+    }
+  });
+
+  function calc() {
+    const cases    = +document.getElementById("rCases").value;
+    const option   = +document.getElementById("rOption").value;
+    const cost     = +document.getElementById("rCost").value;
+    const growth   = +document.getElementById("rGrowth").value;
+
+    document.getElementById("dCases").innerHTML  = fmtN(cases)  + '<span class="unit">件</span>';
+    document.getElementById("dOption").innerHTML = fmtN(option) + '<span class="unit">円/件</span>';
+    document.getElementById("dCost").innerHTML   = fmtN(cost)   + '<span class="unit">円/月</span>';
+    document.getElementById("dGrowth").innerHTML = growth       + '<span class="unit">%</span>';
+
+    const annualRev    = cases * option * (1 + growth / 100);
+    const annualCostY  = cost * 12;
+    const annualProfit = annualRev - annualCostY;
+    const fiveYear     = annualProfit * 5;
+
+    document.getElementById("kSales").textContent = fmt(annualRev);
+
+    const kP = document.getElementById("kProfit");
+    kP.textContent = fmt(annualProfit);
+    kP.className = "kpi-value " + (annualProfit >= 0 ? "color-teal" : "color-orange");
+
+    if (annualProfit > 0) {
+      const months = (annualCostY / annualRev) * 12;
+      document.getElementById("kRoi").textContent = months.toFixed(1) + " ヶ月";
+    } else {
+      document.getElementById("kRoi").textContent = "—";
+    }
+
+    const kF = document.getElementById("kFive");
+    kF.textContent = fmt(fiveYear);
+    kF.className = "kpi-value " + (fiveYear >= 0 ? "color-teal" : "color-orange");
+
+    const profitData = [0];
+    const cashData   = [0];
+    for (let i = 1; i <= 5; i++) {
+      profitData.push(annualProfit * i);
+      cashData.push(annualRev * i - annualCostY);
+    }
+
+    chart.data.datasets[0].data = profitData;
+    chart.data.datasets[1].data = cashData;
+    chart.update();
+  }
+
+  ["rCases", "rOption", "rCost", "rGrowth"].forEach(id =>
+    document.getElementById(id).addEventListener("input", calc)
+  );
+
+  calc();
+</script>
+</body>
+</html>
