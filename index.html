@@ -124,19 +124,40 @@
       color: var(--text);
     }
 
-    .inp-val {
+    .inp-val-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    input[type=number].inp-num {
+      width: 96px;
+      padding: 4px 8px;
+      font-family: inherit;
       font-size: 14px;
       font-weight: 700;
       color: var(--blue);
+      background: var(--blue-light);
+      border: 1px solid rgba(24,95,165,0.2);
+      border-radius: var(--radius-md);
       text-align: right;
-      min-width: 100px;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+      -moz-appearance: textfield;
     }
 
-    .inp-val .unit {
+    input[type=number].inp-num::-webkit-inner-spin-button,
+    input[type=number].inp-num::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    input[type=number].inp-num:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(24,95,165,0.12);
+    }
+
+    .inp-unit {
       font-size: 11px;
-      font-weight: 400;
       color: var(--text-muted);
-      margin-left: 2px;
+      white-space: nowrap;
     }
 
     /* Range slider */
@@ -330,10 +351,13 @@
       <div class="inp-block">
         <div class="inp-row">
           <span class="inp-name">年間胃カメラ件数</span>
-          <span class="inp-val" id="dCases">2,200<span class="unit">件</span></span>
+          <div class="inp-val-wrap">
+            <input type="number" class="inp-num" id="nCases" min="500" max="30000" step="50" value="2200">
+            <span class="inp-unit">件</span>
+          </div>
         </div>
-        <input type="range" min="500" max="5000" step="50" value="2200" id="rCases">
-        <div class="range-minmax"><span>500件</span><span>5,000件</span></div>
+        <input type="range" min="500" max="30000" step="50" value="2200" id="rCases">
+        <div class="range-minmax"><span>500件</span><span>3万件</span></div>
       </div>
 
       <hr class="divider">
@@ -341,10 +365,13 @@
       <div class="inp-block">
         <div class="inp-row">
           <span class="inp-name">オプション加算額（With AI）</span>
-          <span class="inp-val" id="dOption">1,500<span class="unit">円/件</span></span>
+          <div class="inp-val-wrap">
+            <input type="number" class="inp-num" id="nOption" min="500" max="7000" step="100" value="1500">
+            <span class="inp-unit">円/件</span>
+          </div>
         </div>
-        <input type="range" min="500" max="3000" step="100" value="1500" id="rOption">
-        <div class="range-minmax"><span>500円</span><span>3,000円</span></div>
+        <input type="range" min="500" max="7000" step="100" value="1500" id="rOption">
+        <div class="range-minmax"><span>500円</span><span>7,000円</span></div>
       </div>
 
       <hr class="divider">
@@ -352,7 +379,10 @@
       <div class="inp-block">
         <div class="inp-row">
           <span class="inp-name">月額AI費用</span>
-          <span class="inp-val" id="dCost">370,000<span class="unit">円/月</span></span>
+          <div class="inp-val-wrap">
+            <input type="number" class="inp-num" id="nCost" min="100000" max="500000" step="10000" value="370000">
+            <span class="inp-unit">円/月</span>
+          </div>
         </div>
         <input type="range" min="100000" max="500000" step="10000" value="370000" id="rCost">
         <div class="range-minmax"><span>10万円</span><span>50万円</span></div>
@@ -363,10 +393,13 @@
       <div class="inp-block">
         <div class="inp-row">
           <span class="inp-name">件数増加率</span>
-          <span class="inp-val" id="dGrowth">1<span class="unit">%</span></span>
+          <div class="inp-val-wrap">
+            <input type="number" class="inp-num" id="nGrowth" min="0" max="50" step="1" value="1">
+            <span class="inp-unit">%</span>
+          </div>
         </div>
-        <input type="range" min="0" max="20" step="1" value="1" id="rGrowth">
-        <div class="range-minmax"><span>0%</span><span>20%</span></div>
+        <input type="range" min="0" max="50" step="1" value="1" id="rGrowth">
+        <div class="range-minmax"><span>0%</span><span>50%</span></div>
       </div>
     </div>
 
@@ -487,16 +520,45 @@
     }
   });
 
-  function calc() {
-    const cases    = +document.getElementById("rCases").value;
-    const option   = +document.getElementById("rOption").value;
-    const cost     = +document.getElementById("rCost").value;
-    const growth   = +document.getElementById("rGrowth").value;
+  const pairs = [
+    { num: "nCases",  rng: "rCases",  min: 500,    max: 30000  },
+    { num: "nOption", rng: "rOption", min: 500,    max: 7000   },
+    { num: "nCost",   rng: "rCost",   min: 100000, max: 500000 },
+    { num: "nGrowth", rng: "rGrowth", min: 0,      max: 50     }
+  ];
 
-    document.getElementById("dCases").innerHTML  = fmtN(cases)  + '<span class="unit">件</span>';
-    document.getElementById("dOption").innerHTML = fmtN(option) + '<span class="unit">円/件</span>';
-    document.getElementById("dCost").innerHTML   = fmtN(cost)   + '<span class="unit">円/月</span>';
-    document.getElementById("dGrowth").innerHTML = growth       + '<span class="unit">%</span>';
+  pairs.forEach(({ num, rng, min, max }) => {
+    const nEl = document.getElementById(num);
+    const rEl = document.getElementById(rng);
+
+    rEl.addEventListener("input", () => {
+      nEl.value = rEl.value;
+      calc();
+    });
+
+    nEl.addEventListener("input", () => {
+      let v = parseFloat(nEl.value);
+      if (isNaN(v)) return;
+      v = Math.min(max, Math.max(min, v));
+      rEl.value = v;
+      calc();
+    });
+
+    nEl.addEventListener("blur", () => {
+      let v = parseFloat(nEl.value);
+      if (isNaN(v)) v = parseFloat(rEl.value);
+      v = Math.min(max, Math.max(min, v));
+      nEl.value = v;
+      rEl.value = v;
+      calc();
+    });
+  });
+
+  function calc() {
+    const cases    = +document.getElementById("nCases").value  || 0;
+    const option   = +document.getElementById("nOption").value || 0;
+    const cost     = +document.getElementById("nCost").value   || 0;
+    const growth   = +document.getElementById("nGrowth").value || 0;
 
     const annualRev    = cases * option * (1 + growth / 100);
     const annualCostY  = cost * 12;
@@ -531,10 +593,6 @@
     chart.data.datasets[1].data = cashData;
     chart.update();
   }
-
-  ["rCases", "rOption", "rCost", "rGrowth"].forEach(id =>
-    document.getElementById(id).addEventListener("input", calc)
-  );
 
   calc();
 </script>
