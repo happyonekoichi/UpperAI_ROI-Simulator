@@ -352,12 +352,12 @@
         <div class="inp-row">
           <span class="inp-name">年間胃カメラ件数</span>
           <div class="inp-val-wrap">
-            <input type="number" class="inp-num" id="nCases" min="500" max="30000" step="50" value="2200">
+            <input type="number" class="inp-num" id="nCases" min="0" max="30000" step="50" value="2000">
             <span class="inp-unit">件</span>
           </div>
         </div>
-        <input type="range" min="500" max="30000" step="50" value="2200" id="rCases">
-        <div class="range-minmax"><span>500件</span><span>3万件</span></div>
+        <input type="range" min="0" max="30000" step="50" value="2000" id="rCases">
+        <div class="range-minmax"><span>0件</span><span>3万件</span></div>
       </div>
 
       <hr class="divider">
@@ -366,12 +366,12 @@
         <div class="inp-row">
           <span class="inp-name">オプション加算額（With AI）</span>
           <div class="inp-val-wrap">
-            <input type="number" class="inp-num" id="nOption" min="500" max="7000" step="100" value="1500">
+            <input type="number" class="inp-num" id="nOption" min="0" max="7000" step="100" value="2000">
             <span class="inp-unit">円/件</span>
           </div>
         </div>
-        <input type="range" min="500" max="7000" step="100" value="1500" id="rOption">
-        <div class="range-minmax"><span>500円</span><span>7,000円</span></div>
+        <input type="range" min="0" max="7000" step="100" value="2000" id="rOption">
+        <div class="range-minmax"><span>0円</span><span>7,000円</span></div>
       </div>
 
       <hr class="divider">
@@ -380,12 +380,12 @@
         <div class="inp-row">
           <span class="inp-name">月額AI費用</span>
           <div class="inp-val-wrap">
-            <input type="number" class="inp-num" id="nCost" min="100000" max="500000" step="10000" value="370000">
+            <input type="number" class="inp-num" id="nCost" min="0" max="500000" step="10000" value="110000">
             <span class="inp-unit">円/月</span>
           </div>
         </div>
-        <input type="range" min="100000" max="500000" step="10000" value="370000" id="rCost">
-        <div class="range-minmax"><span>10万円</span><span>50万円</span></div>
+        <input type="range" min="0" max="500000" step="10000" value="110000" id="rCost">
+        <div class="range-minmax"><span>0円</span><span>50万円</span></div>
       </div>
 
       <hr class="divider">
@@ -521,9 +521,9 @@
   });
 
   const pairs = [
-    { num: "nCases",  rng: "rCases",  min: 500,    max: 30000  },
-    { num: "nOption", rng: "rOption", min: 500,    max: 7000   },
-    { num: "nCost",   rng: "rCost",   min: 100000, max: 500000 },
+    { num: "nCases",  rng: "rCases",  min: 0, max: 30000  },
+    { num: "nOption", rng: "rOption", min: 0, max: 7000   },
+    { num: "nCost",   rng: "rCost",   min: 0, max: 500000 },
     { num: "nGrowth", rng: "rGrowth", min: 0,      max: 50     }
   ];
 
